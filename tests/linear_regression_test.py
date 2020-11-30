@@ -1,6 +1,6 @@
 import numpy as np
-from utils import split_x_y
-from linear_regression import LinearRegression
+from models.linear_regression import LinearRegression
+from models.utils import split_x_y
 
 data = np.loadtxt('data/cateter.txt')
 X,Y = split_x_y(data)
