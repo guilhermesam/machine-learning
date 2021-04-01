@@ -1,12 +1,23 @@
-import numpy as np
-import pandas as pd
+try:
+	import argparse
+	import logging
+	import sys
+	import numpy as np
 
+except ImportError as error:
+	print(error)
+	print()
+	print("You must install the requirements:")
+	print("  pip3 install --upgrade pip")
+	print("  pip3 install -r requirements.txt ")
+	print()
+	sys.exit(-1)
 
-class MyKMeans:
-    def __init__(self, n_clusters, tol, iterations, logging=False, log_interval=1):
+class KMeans:
+    def __init__(self, n_clusters, error_tolerance, max_iter):
         self.n_clusters = n_clusters
-        self.iterations = iterations
-        self.tol = tol
+        self.max_iter = max_iter
+        self.error_tolerance = error_tolerance
         self.centroids = {}
         self.logging = logging
         self.log_interval = log_interval
@@ -52,7 +63,7 @@ class MyKMeans:
 
 if __name__ == "__main__":
 
-    model = MyKMeans(n_clusters=4, tol=0.1, iterations=10)
+    model = KMeans(n_clusters=4, tol=0.1, iterations=10)
     data = np.loadtxt('data/customer_churn/customer_churn_processed.txt')
 
     model.fit(data)
