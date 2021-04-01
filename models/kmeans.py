@@ -1,55 +1,60 @@
 import numpy as np
+import pandas as pd
 
-class KMeans:
-    def __init__(self, n_clusters, tol, max_iter):
+
+class MyKMeans:
+    def __init__(self, n_clusters, tol, iterations, logging=False, log_interval=1):
         self.n_clusters = n_clusters
-        self.max_iter = max_iter
+        self.iterations = iterations
         self.tol = tol
         self.centroids = {}
+        self.logging = logging
+        self.log_interval = log_interval
+        self.classifications = {}
 
-    def euclidian_distance(self, p1, p2):
-        return sum((p1 - p2) ** 2) ** 0.5
+        self.__str__ = "KMeans(n_clusters={}, iterations={}, tol={})".format(
+            self.n_clusters, self.iterations, self.tol)
 
-    # O algoritmo inicia escolhendo k pontos de dado aleatórios do dataset para serem os medoids iniciais
-    def initialize_medoids(self, data):
+
+    def __initialize_random_centroids(self, data):
         random_indexes = np.random.choice(data.shape[0], size=self.n_clusters, replace=False)
         for i in range(self.n_clusters):
             self.centroids[i] = data[random_indexes[i]]
 
+
+    def __initialize_dict_of_empty_lists(self, length):
+        this_dict = {}
+        for i in range(length):
+            this_dict[i] = list()
+        return this_dict
+
+
     def fit(self,data):
-        self.initialize_medoids(data)
+        self.__initialize_random_centroids(data)
 
-        # para cada etapa de iteração
-        for epoch in range(self.max_iter):
-            self.classifications = {}
+        for epoch in range(self.iterations):
 
-            # inicializar o dicionário de classificações
-            for i in range(self.n_clusters):
-                self.classifications[i] = []
+            self.classifications = self.__initialize_dict_of_empty_lists(self.n_clusters)
 
-            # para cada linha do dataset
-            for feature_set in data:
-                # calcular as distâncias da linha para cada centroid
-                distances = [self.euclidian_distance(feature_set, self.centroids[centroid]) for centroid in self.centroids]
-                # obter o índice da menor distância
-                min_distance_index = distances.index(min(distances))
-                # adicionar à linha, a classificação
-                self.classifications[min_distance_index].append(feature_set)
+            for row in data:
+                distances_to_centroid = [np.linalg.norm(row - self.centroids[centroid]) for centroid in self.centroids]
+                classification = distances_to_centroid.index(min(distances_to_centroid))
+                self.classifications[classification].append(row)
 
-            # salvar os centroids atuais como anteriores para atualização
-            previous_centroids = self.centroids
+            for classification in self.classifications:
+                self.centroids[classification] = np.average(self.classifications[classification],axis=0)
 
-            # para cada rótulo de classificação
-            for key in self.classifications:
-                self.centroids[key] = np.average(self.classifications[key], axis=0)
-
-            for c in self.centroids:
-                original_centroid = previous_centroids[c]
-                current_centroid = self.centroids[c]
-                
-                if np.sum((current_centroid - original_centroid) / (original_centroid * 100)) < self.tol:
-                    break
 
     def predict(self, data):
         distances = [np.linalg.norm(data - self.centroids[c]) for c in self.centroids]
         return distances.index(min(distances))
+
+
+if __name__ == "__main__":
+
+    model = MyKMeans(n_clusters=4, tol=0.1, iterations=10)
+    data = np.loadtxt('data/customer_churn/customer_churn_processed.txt')
+
+    model.fit(data)
+
+    print(model.classifications)
